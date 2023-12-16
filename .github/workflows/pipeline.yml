@@ -14,8 +14,6 @@ jobs:
     steps:
     - name: Checkout the repo
       uses: actions/checkout@v3
-    - name: Use Node.js18x
-      uses: actions/setup-node@v3
       with:
         node-version: 18.x
         cache: 'npm'
@@ -25,3 +23,28 @@ jobs:
       run: npm run test:unit
     - name: Display user name
       run: echo "${{ github.actor }}"
+  deploy:
+    needs: build-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to production
+        uses: johnbeynon/render-deploy-action@v0.0.8
+        with:
+          service-id: ${{ secrets.MY_RENDER_SERVICE_ID }}
+          api-key: ${{ secrets.MY_RENDER_API_KEY }}
+  UI-tests:
+    needs: deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout the repo
+      uses: actions/checkout@v3
+      with:
+        node-version: 18.x
+        cache: 'npm'
+    - name: Install project dependencies
+      run: npm install
+    - name: Install Playwright
+      run: npx playwright install
+    - name: Run UI test for the application
+      run: npm run test:ui
